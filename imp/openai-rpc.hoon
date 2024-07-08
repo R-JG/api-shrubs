@@ -46,7 +46,7 @@
   ++  poke
     |=  [=stud:neo vaz=vase]
     ^-  (quip card:neo pail:neo)
-    ?+  stud  !!
+    ?+  stud  [~ pail]
         %iris-res
       ?>  ?=(%openai-rpc-input p.pail)
       =/  state
@@ -85,6 +85,10 @@
 +$  ireq  [hand=pith:neo dat=request:http]
 :: :: neo %iris-res poke
 +$  ires  [hand=pith:neo dat=client-response:iris]
+::
++$  req  openai-rpc-input
+::
++$  res  openai-rpc-output
 ::
 ++  extra
   |=  dat=client-response:iris
@@ -134,8 +138,6 @@
 ::
 ++  get-models
   |%
-  +$  req  $>(%get-models openai-rpc-input)
-  +$  res  $>(%get-models openai-rpc-output)
   ++  dek
     =,  dejs:format
     |=  =json
@@ -147,8 +149,6 @@
 ::
 ++  list-assistants
   |%
-  +$  req  $>(%list-assistants openai-rpc-input)
-  +$  res  $>(%list-assistants openai-rpc-output)
   ++  dek
     |=  =json
     =/  result
@@ -167,10 +167,9 @@
         content=@t
         file-ids=(list @t)
     ==
-  +$  req  $>(%create-thread openai-rpc-input)
-  +$  res  $>(%create-thread openai-rpc-output)
   ++  enk
     |=  =req
+    ?>  ?=(%create-thread -.req)
     %+  frond:enjs:format  %messages
     :-  %a
     %+  turn  messages.req.req
@@ -186,30 +185,31 @@
 ::
 ++  retrieve-thread
   |%
-  +$  req  $>(%retrieve-thread openai-rpc-input)
-  +$  res  $>(%retrieve-thread openai-rpc-output)
   ++  dek  thread:dejs
-  ++  api  |=([=conf =req] (api-get conf /threads/[thread-id.req.req]))
+  ++  api
+    |=  [=conf =req]
+    ?>  ?=(%retrieve-thread -.req)
+    (api-get conf /threads/[thread-id.req.req])
   --
 ::
 ++  delete-thread
   |%
-  +$  req  $>(%delete-thread openai-rpc-input)
-  +$  res  $>(%delete-thread openai-rpc-output)
   ++  dek
     =,  dejs:format
     (ot id+so object+so deleted+bo ~)
-  ++  api  |=([=conf =req] (api-delete conf /threads/[thread-id.req.req]))
+  ++  api
+    |=  [=conf =req]
+    ?>  ?=(%delete-thread -.req)
+    (api-delete conf /threads/[thread-id.req.req])
   --
 ::  ::  ::  ::  ::  ::  ::  ::  ::  ::  ::  ::
 ::  messages
 ::
 ++  create-message
   |%
-  +$  req  $>(%create-message openai-rpc-input)
-  +$  res  $>(%create-message openai-rpc-output)
   ++  enk
     |=  =req
+    ?>  ?=(%create-message -.req)
     =,  enjs:format
     %-  pairs
     :~  role+s+role.req.req
@@ -219,13 +219,12 @@
   ++  dek  message:dejs
   ++  api
     |=  [=conf =req]
+    ?>  ?=(%create-message -.req)
     (api-post conf /threads/[thread-id.req.req]/messages (enk req))
   --
 ::
 ++  list-messages
   |%
-  +$  req  $>(%list-messages openai-rpc-input)
-  +$  res  $>(%list-messages openai-rpc-output)
   ++  dek
     |=  =json
     =/  result
@@ -234,16 +233,16 @@
     +.result
   ++  api
     |=  [=conf =req]
+    ?>  ?=(%list-messages -.req)
     (api-get conf /threads/[thread-id.req.req]/messages)
   --
 ::
 ++  retrieve-message
   |%
-  +$  req  $>(%retrieve-message openai-rpc-input)
-  +$  res  $>(%retrieve-message openai-rpc-output)
   ++  dek  message:dejs
   ++  api
     |=  [=conf =req]
+    ?>  ?=(%retrieve-message -.req)
     (api-get conf /threads/[thread-id.req.req]/messages/[message-id.req.req])
   --
 ::  ::  ::  ::  ::  ::  ::  ::  ::  ::  ::  ::
@@ -251,35 +250,36 @@
 ::
 ++  create-run
   |%
-  +$  req  $>(%create-run openai-rpc-input)
-  +$  res  $>(%create-run openai-rpc-output)
   ++  enk
     |=  =req
+    ?>  ?=(%create-run -.req)
     =,  enjs:format
     %-  pairs
     :~  %'assistant_id'^s+assistant-id.req.req
     ==
   ++  dek  run:dejs
-  ++  api  |=([=conf =req] (api-post conf /threads/[thread-id.req.req]/runs (enk req)))
+  ++  api
+    |=  [=conf =req]
+    ?>  ?=(%create-run -.req)
+    (api-post conf /threads/[thread-id.req.req]/runs (enk req))
   --
 ::
 ++  list-runs
   |%
-  +$  req  $>(%list-runs openai-rpc-input)
-  +$  res  $>(%list-runs openai-rpc-output)
   ++  dek
     |=  =json
     =/  result
       %.  json
       (ot:dejs:format object+so:dejs:format data+(ar:dejs:format run:dejs) ~)
     +.result
-  ++  api  |=([=conf =req] (api-get conf /threads/[thread-id.req.req]/runs))
+  ++  api
+    |=  [=conf =req]
+    ?>  ?=(%list-runs -.req)
+    (api-get conf /threads/[thread-id.req.req]/runs)
   --
 ::
 ++  list-run-steps
   |%
-  +$  req  $>(%list-run-steps openai-rpc-input)
-  +$  res  $>(%list-run-steps openai-rpc-output)
   ++  dek
     |=  =json
     =/  result
@@ -288,35 +288,33 @@
     +.result
   ++  api
     |=  [=conf =req]
+    ?>  ?=(%list-run-steps -.req)
     (api-get conf /threads/[thread-id.req.req]/runs/[run-id.req.req]/steps)
   --
 ::
 ++  retrieve-run
   |%
-  +$  req  $>(%retrieve-run openai-rpc-input)
-  +$  res  $>(%retrieve-run openai-rpc-output)
   ++  dek  run:dejs
   ++  api
     |=  [=conf =req]
+    ?>  ?=(%retrieve-run -.req)
     (api-get conf /threads/[thread-id.req.req]/runs/[run-id.req.req])
   --
 ::
 ++  retrieve-run-step
   |%
-  +$  req  $>(%retrieve-run-step openai-rpc-input)
-  +$  res  $>(%retrieve-run-step openai-rpc-output)
   ++  dek  run-step:dejs
   ++  api
     |=  [=conf =req]
+    ?>  ?=(%retrieve-run-step -.req)
     (api-get conf /threads/[thread-id.req.req]/runs/[run-id.req.req]/steps/[step-id.req.req])
   --
 ::
 ++  submit-tool-output
   |%
-  +$  req  $>(%submit-tool-output openai-rpc-input)
-  +$  res  $>(%submit-tool-output openai-rpc-output)
   ++  enk
     |=  =req
+    ?>  ?=(%submit-tool-output -.req)
     =,  enjs:format
     %+  frond  %'tool_outputs'
     :-  %a
@@ -324,6 +322,7 @@
   ++  dek  run:dejs
   ++  api
     |=  [=conf =req]
+    ?>  ?=(%submit-tool-output -.req)
     (api-post conf /threads/[thread-id.req.req]/runs/[run-id.req.req]/'submit_tool_outputs' (enk req))
   --
 --
