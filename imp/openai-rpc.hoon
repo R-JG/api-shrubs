@@ -1,8 +1,8 @@
 /@  openai-rpc-input
 /@  openai-rpc-output
 /-  constants
-/-  openai
-=,  openai
+/-  openai-rpc
+=,  openai-rpc
 =<
 ^-  kook:neo
 |%
@@ -98,7 +98,7 @@
     ?~  full-file.dat  ''
     q.data.u.full-file.dat
   =/  jon  (de:json:html cod)
-  ?~  jon  ~&(>>> [%body-is-not-json cord] !!)
+  ?~  jon  ~&(>>> [%body-is-not-json cod] !!)
   ~|  json+u.jon
   u.jon
 ::
