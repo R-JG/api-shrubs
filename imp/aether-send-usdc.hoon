@@ -14,6 +14,10 @@
   :~  :+  [|/%tas |]
         [%or pro/%aether-action pro/%aether-response ~]
       (sy %iris-res ~)
+      ::
+      :+  [&/%hexdata |]
+        pro/%sig
+      ~
   ==
 ++  deps   *deps:neo
 ++  form
@@ -24,15 +28,26 @@
     ^-  (quip card:neo pail:neo)
     ?>  &(?=(^ pal) ?=(%aether-action p.u.pal))
     =/  act  !<(aether-action q.u.pal)
-    ?>  ?=(%send-eth -.action.act)
+    ?>  ?=(%send-usdc -.action.act)
+    =/  dat=@t
+      %-  crip
+      %-  encode-call:rpc:ethereum
+      ^-  call-data:rpc:ethereum
+      :-  'transfer(address,uint256)'
+      :~  [%address `@ux`(rash to.action.act ;~(pfix (jest '0x') hex))]
+          [%uint `@ud`value.action.act]
+      ==
+    =/  usdc=@t  (cord:addresses:aether %'USDC')
+    =/  us=@t  (scot %ux addr.wallet.state.act)
+    =/  hexdat=@ux  (rash dat ;~(pfix (jest '0x') hex))
     =/  =aether-action
       :*  state.act
-          %populate-tx  (scot %ux addr.wallet.state.act)
-          to.action.act  value.action.act  ''
+          %populate-tx  us  usdc  0  dat
       ==
     =/  =made:neo  [%alchemy-api [~ aether-action/!>(aether-action)] ~]
     :_  u.pal
-    :~  [(snoc here.bowl %populate-tx) %make made]
+    :~  [(snoc here.bowl %hexdata) %make [%sig [~ sig/!>(hexdat)] ~]]
+        [(snoc here.bowl %populate-tx) %make made]
     ==
   ::
   ++  poke
@@ -40,7 +55,7 @@
     ^-  (quip card:neo pail:neo)
     ?>  ?=(%aether-action p.pail)
     =/  state  !<(aether-action q.pail)
-    ?>  ?=(%send-eth -.action.state)
+    ?>  ?=(%send-usdc -.action.state)
     ?+  sud  [~ pail]
         %gift
       =/  gif  !<(gift:neo vaz)
@@ -53,6 +68,10 @@
       ?+  -.q.kid  [~ pail]
         ::
           %populate-tx
+        =/  usdc=@t
+          (cord:addresses:aether %'USDC')
+        =/  hexdat=@ux
+          !<(@ux q.pail:(~(got of:neo kids.bowl) (snoc here.bowl %hexdata)))
         =/  tx=typed-transaction:rpc:ethereum
           :*  %0x2
               (chaincodes.aether network.q.kid)
@@ -60,9 +79,9 @@
               (need priority-fee.state.state)
               (need base-fee.state.state)
               (mul gas.q.kid 2)
-              `@ux`(slav %ux (crip (cass (trip to.action.state))))
-              (add value.action.state gas.q.kid)
-              0x0
+              (rash usdc ;~(pfix (jest '0x') hex))
+              0
+              hexdat
               ~
           ==
         =/  signed=@ux
